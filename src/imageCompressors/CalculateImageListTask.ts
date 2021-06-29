@@ -1,7 +1,7 @@
-import { CMDData } from "../CMDData";
-import { Task } from "../drongo/task/Task";
 import * as path from "path";
+import { CMDData } from "../CMDData";
 import { DrongoEvent } from "../drongo/events/DrongoEvent";
+import { Task } from "../drongo/task/Task";
 
 /**
  * 计算有多少需要压缩的图片

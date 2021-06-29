@@ -1,18 +1,22 @@
+import { execFile } from "child_process";
+import * as fs from "fs";
+import * as path from "path";
 import { CMDData } from "../CMDData";
 import { TaskQueue } from "../drongo/task/TaskQueue";
-import { CalculateImageMD5Task } from "./CalculateImageMD5Task";
 import { CalculateImageListTask } from "./CalculateImageListTask";
+import { CalculateImageMD5Task } from "./CalculateImageMD5Task";
 import { ImageCompressorTask } from "./ImageCompressorTask";
-import * as path from "path";
-import * as fs from "fs"
 
 
 export class ImageCompressorPipeline extends TaskQueue {
     constructor() {
         super();
 
+        //MD5
         this.addTask(new CalculateImageMD5Task());
+        //计算需要处理的列表
         this.addTask(new CalculateImageListTask());
+        //压缩图片
         this.addTask(new ImageCompressorTask());
     }
 
@@ -23,30 +27,38 @@ export class ImageCompressorPipeline extends TaskQueue {
 
     protected allComplete():void{
         if(CMDData.data.fileConfigs.size==0){
-            throw new Error("没有发现任何图片！");
+            return;
+        }else{
+            let list:Array<{file:string,md5:string,quality:string}>=[];
+            let values=CMDData.data.fileConfigs.values();
+            let next=values.next();
+            while (!next.done){
+                list.push(next.value);
+                next=values.next();
+            }
+            let jsonStr=JSON.stringify(list,null,2);
+            if(CMDData.data.fileRecordPath){
+                fs.writeFileSync(CMDData.data.fileRecordPath,jsonStr);
+                console.log("fileConfigs.json保存完毕: "+CMDData.data.fileRecordPath)
+            }
         }
-        let list:Array<{file:string,md5:string,quality:string}>=[];
-        let values=CMDData.data.fileConfigs.values();
-        let next=values.next();
-        while (!next.done){
-            list.push(next.value);
-            next=values.next();
-        }
-        let jsonStr=JSON.stringify(list,null,2);
-        if(CMDData.data.fileRecordPath){
-            fs.writeFileSync(CMDData.data.fileRecordPath,jsonStr);
-            console.log("fileConfigs.json保存完毕: "+CMDData.data.fileRecordPath)
-        }
+        //清理设置在CMDData.data上的数据
+        this.clearDatas();
         super.allComplete();
     }
 
+    
+
     private __init(): void {
         //验证路径
+        CMDData.data.output=CMDData.data.input+"/definitions/LowDefinition";
+        CMDData.data.assetsPath=CMDData.data.input+"/assets";
+        CMDData.data.pngquantExe=path.parse(__dirname).dir+"/tools/pngquant.exe"
         //先确定两个路径是否正确
-        if (!fs.existsSync(CMDData.data.input) || !fs.existsSync(CMDData.data.output)) {
+        if (!fs.existsSync(CMDData.data.assetsPath) || !fs.existsSync(CMDData.data.output)) {
             throw new Error("input或output 文件夹不存在！");
         }
-        let assetsStats: fs.Stats = fs.statSync(CMDData.data.input);
+        let assetsStats: fs.Stats = fs.statSync(CMDData.data.assetsPath);
         let assetsLDStats: fs.Stats = fs.statSync(CMDData.data.output);
         if (!assetsStats.isDirectory() || !assetsLDStats.isDirectory()) {
             throw new Error("input或output 必须是文件夹");
@@ -57,7 +69,7 @@ export class ImageCompressorPipeline extends TaskQueue {
         if (CMDData.data.configPath) {
             configPath = CMDData.data.configPath;
         } else {
-            configPath = path.parse(CMDData.data.input).dir + "/definitions/definitionConfig.json"
+            configPath = path.parse(CMDData.data.output).dir + "/definitionConfig.json"
         }
         if (configPath) {
             if (fs.existsSync(configPath)) {
@@ -93,6 +105,11 @@ export class ImageCompressorPipeline extends TaskQueue {
         //默认品质
         CMDData.data.defaultQuality = CMDData.data.config ? CMDData.data.config.defaultQuality : "80-90";
 
+        //图片压缩下限，小于这个size就不压缩
+        let minSizeConfig:string=CMDData.data.config?CMDData.data.config.minSize:"100*100";
+        let arr:Array<string>=minSizeConfig.split("*");
+        CMDData.data.minSize=Number(arr[0])*Number(arr[1]);
+
         //排除列表
         CMDData.data.excludeMap = new Map<string, string>();
         if (CMDData.data.config) {
@@ -101,7 +118,16 @@ export class ImageCompressorPipeline extends TaskQueue {
                 if (CMDData.data.config.excludeMap.has(file)) {
                     console.error("definitionConfig.json中的exclude列表存在重复：" + file);
                 }
-                CMDData.data.config.excludeMap.set(file, file);
+            CMDData.data.config.excludeMap.set(file, file);
+            }
+        }
+
+        //包含列表
+        CMDData.data.includeMap=new Map<string,string>();
+        if(CMDData.data.config){
+            for (let index = 0; index < CMDData.data.config.include.length; index++) {
+                const file = CMDData.data.assetsPath+"/"+CMDData.data.config.include[index];
+                this.recursionInclude(file);
             }
         }
 
@@ -116,5 +142,63 @@ export class ImageCompressorPipeline extends TaskQueue {
                 CMDData.data.customQualityMap.set(qualityData.file, qualityData.quality);
             }
         }
+    }
+
+    /**
+     * 递归包含
+     * @param file 
+     */
+    private recursionInclude(file:string):void{
+        const stats=fs.statSync(file);
+        //递归包含
+        if(stats.isDirectory()){
+            let fileList = fs.readdirSync(file);
+            for (let index = 0; index < fileList.length; index++) {
+                const element = fileList[index];
+                this.recursionInclude(file+"/"+element);
+            }
+        }else{
+            let extname:string=path.extname(file);
+            extname=extname.toLocaleLowerCase();
+            if(extname==".png"||extname==".jpg"){
+                let relativePath:string = path.relative(CMDData.data.assetsPath, file);
+                relativePath = relativePath.replace(/\\/g, "/");
+                CMDData.data.includeMap.set(relativePath, relativePath);
+            }
+        }
+    }
+
+    private clearDatas():void{
+        CMDData.data.imageList.length=0;
+        delete CMDData.data["imageList"];
+
+        CMDData.data.fileMD5List.length=0;
+        delete CMDData.data["fileMD5List"];
+
+        CMDData.data.fileConfigs.clear();
+        delete CMDData.data["fileConfigs"];
+
+        CMDData.data.excludeMap.clear();
+        delete CMDData.data["excludeMap"];
+
+        CMDData.data.includeMap.clear();
+        delete CMDData.data["includeMap"];
+
+        CMDData.data.customQualityMap.clear();
+        delete CMDData.data["customQualityMap"];
+
+        delete CMDData.data["defaultQuality"];
+
+        delete CMDData.data["config"];
+        
+        delete CMDData.data["pngquantExe"];
+
+        delete CMDData.data["fileRecordPath"];
+        
+        delete CMDData.data["configPath"];
+
+        delete CMDData.data["assetsPath"];
+
+        delete CMDData.data["minSize"];
     }
 }

@@ -1,8 +1,7 @@
 
-import * as path from "path";
-import * as fs from "fs";
-import * as crypto from "crypto";
 import * as child_process from "child_process";
+import * as fs from "fs";
+import * as path from "path";
 import { CMDData } from "../CMDData";
 import { DrongoEvent } from "../drongo/events/DrongoEvent";
 import { Task } from "../drongo/task/Task";
@@ -14,28 +13,29 @@ export class ImageCompressorTask extends Task {
     private __workCount: number = 10;
 
     private __workList:Array<{ file: string, md5: string, quality: string }>=[];
-
+    private imageList?: Array<{ file: string, md5: string, quality: string }>;
     constructor() {
         super();
     }
 
     start(data?: any): void {
+        this.imageList=CMDData.data.imageList.concat();
         this.tryNexts();
     }
 
     private tryNexts(): void {
-        if(this.__workList.length==0&&this.imageList.length==0){
+        if(this.__workList.length==0&&this.imageList!.length==0){
             this.dispatchEvent(DrongoEvent.COMPLETE);
             return;
         }
         let file: { file: string, md5: string, quality: string };
         let extname: string;
-        while (this.__workList.length < this.__workCount && this.imageList.length) {
-            file = this.imageList.shift()!;
+        while (this.__workList.length < this.__workCount && this.imageList!.length) {
+            file = this.imageList!.shift()!;
             //添加到工作列表
             this.__workList.push(file);
             extname = path.extname(file.file);
-            extname.toLocaleLowerCase();
+            extname=extname.toLocaleLowerCase();
             if (extname == ".png") {
                 this.__pngCompress(file);
             } else {
@@ -45,7 +45,7 @@ export class ImageCompressorTask extends Task {
     }
 
     private __pngCompress(file: { file: string, md5: string, quality: string }, speed: number = 3): void {
-        let input: string = this.input + "/" + file.file;
+        let input: string = this.assetsPath + "/" + file.file;
         let output: string = this.output + "/" + file.file;
 
         //压缩产生的文件名
@@ -70,13 +70,13 @@ export class ImageCompressorTask extends Task {
                 }
             } else {
                 this.mkDirbyFile(output);
-                fs.renameSync(this.input + "/" + m_fileName, output);
+                fs.renameSync(this.assetsPath + "/" + m_fileName, output);
                 this.fileConfigs!.set(file.file, file);
             }
             let index:number=this.__workList.indexOf(file);
             this.__workList.splice(index,1);
             
-            console.log("图片压缩完成：" + (this.__workList.length+this.imageList.length) + " " + file.file);
+            console.log("图片压缩完成：" + (this.__workList.length+this.imageList!.length) + " " + file.file);
             childProcess.kill();
             this.tryNexts();
         });
@@ -92,13 +92,13 @@ export class ImageCompressorTask extends Task {
         } else {
             quality = Number(file.quality);
         }
-        images(this.input + "/" + file.file).save(output, { quality: quality });
+        images(this.assetsPath + "/" + file.file).save(output, { quality: quality });
         this.fileConfigs!.set(file.file, file);
 
         let index:number=this.__workList.indexOf(file);
         this.__workList.splice(index,1);
 
-        console.log("图片压缩完成：" + (this.__workList.length+this.imageList.length) + " " + file.file);
+        console.log("图片压缩完成：" + (this.__workList.length+this.imageList!.length) + " " + file.file);
         this.tryNexts();
     }
 
@@ -122,15 +122,13 @@ export class ImageCompressorTask extends Task {
         return CMDData.data.pngquantExe;
     }
 
-    private get input(): string {
-        return CMDData.data.input;
+    private get assetsPath(): string {
+        return CMDData.data.assetsPath;
     }
 
     private get output(): string {
         return CMDData.data.output;
     }
 
-    private get imageList(): Array<{ file: string, md5: string, quality: string }> {
-        return CMDData.data.imageList;
-    }
+   
 }

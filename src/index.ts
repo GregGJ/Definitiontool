@@ -7,10 +7,8 @@ import { Pipeline } from "./Pipeline";
 
 
 CMDData.data={};
-CMDData.data.input="D:/erciyuan/clientCS/GameWord/assets";
-CMDData.data.output="D:/erciyuan/clientCS/GameWord/definitions/LowDefinition";
-CMDData.data.configPath="D:/erciyuan/clientCS/GameWord/definitions/definitionConfig.json";
-CMDData.data.pngquantExe=path.parse(__dirname).dir+"/tools/pngquant.exe"
+CMDData.data.input="D:/erciyuan/clientCS/GameWord";
+
 
 class Main{
     private pipeline:Pipeline;
@@ -21,14 +19,14 @@ class Main{
         this.pipeline.addEvent(DrongoEvent.COMPLETE,this,this.pipelineComplete);
         this.pipeline.start();
     }
-    
+
     private pipelineError(type: string, target?: any, ...arg: any[]):void{
         console.log(arg);
         process.exit();
     }
     
     private pipelineComplete(type: string, target?: any, ...arg: any[]):void{
-        // console.log(CMDData.data);
+        console.log(CMDData.data);
         process.exit();
     }
 }
