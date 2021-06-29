@@ -27,7 +27,7 @@
     "customs":[
         {
             "file":"assets/xxxx",
-            "quality":90
+            "quality":"80-90"
         }
     ]
 }
