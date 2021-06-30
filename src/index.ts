@@ -100,7 +100,9 @@ if (options.input && options.projectPath) {
         CMDData.data = {};
         CMDData.data.input = options.input;
         CMDData.data.projectPath = options.projectPath;
-        new Main();
+        // new Main();
+
+        console.log("我操，无情！");
     } else {
         console.log("-input not exists");
     }

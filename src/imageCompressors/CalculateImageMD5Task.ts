@@ -4,7 +4,6 @@ import * as path from "path";
 import { CMDData } from "../CMDData";
 import { DrongoEvent } from "../drongo/events/DrongoEvent";
 import { Task } from "../drongo/task/Task";
-import { cnlog } from "../Log";
 const imageinfo =require("imageinfo");
 
 export class CalculateImageMD5Task extends Task {
@@ -66,7 +65,7 @@ export class CalculateImageMD5Task extends Task {
                 //真实类型
                 trueType="."+info.format.toLocaleLowerCase();
                 if(extname!=trueType){
-                    CMDData.data.logger.error(cnlog("文件后缀"+extname+" 真实类型"+trueType+" "+relativePath));
+                    CMDData.data.logger.error("文件后缀"+extname+" 真实类型"+trueType+" "+relativePath);
                 }else{
                     out.push({ file: relativePath, md5: md5Code });
                 }
