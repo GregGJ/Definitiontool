@@ -7,19 +7,18 @@ import { CopyDirTask } from "./task/CopyDirTask";
 import { SVNCommit } from "./task/SVNCommit";
 import * as fs from "fs";
 const log4js = require("log4js");
-const { Command } = require('commander');
+const program = require('commander');
 
-
-let program = new Command();
 
 program
-    .option('-i, --input', 'SVN工程目录')
-    .option('-p, --projectPath', '零时低清工程目录')
-
+    .version('0.0.1')
+    .option('-i, --input [value]', 'SVN工程目录')
+    .option('-p, --projectPath [value]', '零时低清工程目录')
+    
 program.parse(process.argv);
 
 const options = program.opts();
-if (options.debug) console.log(options);
+console.log(options);
 
 class Main {
 
@@ -102,13 +101,13 @@ if (options.input && options.projectPath) {
         CMDData.data.projectPath = options.projectPath;
         new Main();
     } else {
-        console.log("input 项目文件夹不存在！");
+        console.log("-i项目文件夹不存在！");
     }
 }else{
     if(!options.input){
-        console.log("input参数不能为空");
+        console.log("-i参数不能为空");
     }else{
-        console.log("projectPath参数不能为空");
+        console.log("-p参数不能为空");
     }
 
 }
