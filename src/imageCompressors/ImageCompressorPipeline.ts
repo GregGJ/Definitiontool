@@ -25,21 +25,21 @@ export class ImageCompressorPipeline extends TaskQueue {
         super.start(data);
     }
 
-    protected allComplete():void{
-        if(CMDData.data.fileConfigs.size==0){
+    protected allComplete(): void {
+        if (CMDData.data.fileConfigs.size == 0) {
             return;
-        }else{
-            let list:Array<{file:string,md5:string,quality:string}>=[];
-            let values=CMDData.data.fileConfigs.values();
-            let next=values.next();
-            while (!next.done){
+        } else {
+            let list: Array<{ file: string, md5: string, quality: string }> = [];
+            let values = CMDData.data.fileConfigs.values();
+            let next = values.next();
+            while (!next.done) {
                 list.push(next.value);
-                next=values.next();
+                next = values.next();
             }
-            let jsonStr=JSON.stringify(list,null,2);
-            if(CMDData.data.fileRecordPath){
-                fs.writeFileSync(CMDData.data.fileRecordPath,jsonStr);
-                console.log("fileConfigs.json保存完毕: "+CMDData.data.fileRecordPath)
+            let jsonStr = JSON.stringify(list, null, 2);
+            if (CMDData.data.fileRecordPath) {
+                fs.writeFileSync(CMDData.data.fileRecordPath, jsonStr);
+                CMDData.data.logger.info("fileConfigs.json保存完毕: " + CMDData.data.fileRecordPath);
             }
         }
         //清理设置在CMDData.data上的数据
@@ -47,21 +47,23 @@ export class ImageCompressorPipeline extends TaskQueue {
         super.allComplete();
     }
 
-    
+
 
     private __init(): void {
         //验证路径
-        CMDData.data.output=CMDData.data.input+"/definitions/LowDefinition";
-        CMDData.data.assetsPath=CMDData.data.input+"/assets";
-        CMDData.data.pngquantExe=path.parse(__dirname).dir+"/tools/pngquant.exe"
+        CMDData.data.output = CMDData.data.input + "/definitions/LowDefinition";
+        CMDData.data.assetsPath = CMDData.data.input + "/assets";
+        CMDData.data.pngquantExe = path.parse(__dirname).dir + "/tools/pngquant.exe"
         //先确定两个路径是否正确
         if (!fs.existsSync(CMDData.data.assetsPath) || !fs.existsSync(CMDData.data.output)) {
-            throw new Error("input或output 文件夹不存在！");
+            CMDData.data.logger.error("input或output 文件夹不存在！");
+            return;
         }
         let assetsStats: fs.Stats = fs.statSync(CMDData.data.assetsPath);
         let assetsLDStats: fs.Stats = fs.statSync(CMDData.data.output);
         if (!assetsStats.isDirectory() || !assetsLDStats.isDirectory()) {
-            throw new Error("input或output 必须是文件夹");
+            CMDData.data.logger.error("input或output 必须是文件夹！");
+            return;
         }
 
         //读取两个配置文件
@@ -80,7 +82,7 @@ export class ImageCompressorPipeline extends TaskQueue {
 
         //文件记录
         let fileRecordPath: string = CMDData.data.output + "/fileConfigs.json";
-        let fileConfigList:Array<{file:string,md5:string,quality:string}>|undefined;
+        let fileConfigList: Array<{ file: string, md5: string, quality: string }> | undefined;
         if (fileRecordPath) {
             if (fs.existsSync(fileRecordPath)) {
                 let data = fs.readFileSync(fileRecordPath, "utf-8");
@@ -89,9 +91,9 @@ export class ImageCompressorPipeline extends TaskQueue {
             CMDData.data.fileRecordPath = fileRecordPath;
         }
         //老的文件记录
-        CMDData.data.fileConfigs=new Map<string,{file:string,md5:string,quality:string}>();
+        CMDData.data.fileConfigs = new Map<string, { file: string, md5: string, quality: string }>();
         if (fileConfigList && fileConfigList.length) {
-            let fileConfig: {file:string,md5:string,quality:string};
+            let fileConfig: { file: string, md5: string, quality: string };
             for (let index = 0; index < fileConfigList.length; index++) {
                 fileConfig = fileConfigList[index];
                 CMDData.data.fileConfigs.set(fileConfig.file, fileConfig);
@@ -106,9 +108,9 @@ export class ImageCompressorPipeline extends TaskQueue {
         CMDData.data.defaultQuality = CMDData.data.config ? CMDData.data.config.defaultQuality : "80-90";
 
         //图片压缩下限，小于这个size就不压缩
-        let minSizeConfig:string=CMDData.data.config?CMDData.data.config.minSize:"100*100";
-        let arr:Array<string>=minSizeConfig.split("*");
-        CMDData.data.minSize=Number(arr[0])*Number(arr[1]);
+        let minSizeConfig: string = CMDData.data.config ? CMDData.data.config.minSize : "100*100";
+        let arr: Array<string> = minSizeConfig.split("*");
+        CMDData.data.minSize = Number(arr[0]) * Number(arr[1]);
 
         //排除列表
         CMDData.data.excludeMap = new Map<string, string>();
@@ -116,17 +118,18 @@ export class ImageCompressorPipeline extends TaskQueue {
             for (let index = 0; index < CMDData.data.config.exclude.length; index++) {
                 const file = CMDData.data.config.exclude[index];
                 if (CMDData.data.config.excludeMap.has(file)) {
-                    console.error("definitionConfig.json中的exclude列表存在重复：" + file);
+                    CMDData.data.logger.error("definitionConfig.json中的exclude列表存在重复：" + file);
+                    continue;
                 }
-            CMDData.data.config.excludeMap.set(file, file);
+                CMDData.data.config.excludeMap.set(file, file);
             }
         }
 
         //包含列表
-        CMDData.data.includeMap=new Map<string,string>();
-        if(CMDData.data.config){
+        CMDData.data.includeMap = new Map<string, string>();
+        if (CMDData.data.config) {
             for (let index = 0; index < CMDData.data.config.include.length; index++) {
-                const file = CMDData.data.assetsPath+"/"+CMDData.data.config.include[index];
+                const file = CMDData.data.assetsPath + "/" + CMDData.data.config.include[index];
                 this.recursionInclude(file);
             }
         }
@@ -137,7 +140,8 @@ export class ImageCompressorPipeline extends TaskQueue {
             for (let index = 0; index < CMDData.data.config.customs.length; index++) {
                 const qualityData = CMDData.data.config.customs[index];
                 if (CMDData.data.customQualityMap.has(qualityData.file)) {
-                    console.error("definitionConfig.json中的customs列表存在重复：" + qualityData.file);
+                    CMDData.data.logger.error("definitionConfig.json中的customs列表存在重复：" + qualityData.file);
+                    continue;
                 }
                 CMDData.data.customQualityMap.set(qualityData.file, qualityData.quality);
             }
@@ -148,31 +152,31 @@ export class ImageCompressorPipeline extends TaskQueue {
      * 递归包含
      * @param file 
      */
-    private recursionInclude(file:string):void{
-        const stats=fs.statSync(file);
+    private recursionInclude(file: string): void {
+        const stats = fs.statSync(file);
         //递归包含
-        if(stats.isDirectory()){
+        if (stats.isDirectory()) {
             let fileList = fs.readdirSync(file);
             for (let index = 0; index < fileList.length; index++) {
                 const element = fileList[index];
-                this.recursionInclude(file+"/"+element);
+                this.recursionInclude(file + "/" + element);
             }
-        }else{
-            let extname:string=path.extname(file);
-            extname=extname.toLocaleLowerCase();
-            if(extname==".png"||extname==".jpg"){
-                let relativePath:string = path.relative(CMDData.data.assetsPath, file);
+        } else {
+            let extname: string = path.extname(file);
+            extname = extname.toLocaleLowerCase();
+            if (extname == ".png" || extname == ".jpg") {
+                let relativePath: string = path.relative(CMDData.data.assetsPath, file);
                 relativePath = relativePath.replace(/\\/g, "/");
                 CMDData.data.includeMap.set(relativePath, relativePath);
             }
         }
     }
 
-    private clearDatas():void{
-        CMDData.data.imageList.length=0;
+    private clearDatas(): void {
+        CMDData.data.imageList.length = 0;
         delete CMDData.data["imageList"];
 
-        CMDData.data.fileMD5List.length=0;
+        CMDData.data.fileMD5List.length = 0;
         delete CMDData.data["fileMD5List"];
 
         CMDData.data.fileConfigs.clear();
@@ -190,11 +194,11 @@ export class ImageCompressorPipeline extends TaskQueue {
         delete CMDData.data["defaultQuality"];
 
         delete CMDData.data["config"];
-        
+
         delete CMDData.data["pngquantExe"];
 
         delete CMDData.data["fileRecordPath"];
-        
+
         delete CMDData.data["configPath"];
 
         delete CMDData.data["assetsPath"];

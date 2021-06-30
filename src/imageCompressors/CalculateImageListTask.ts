@@ -60,7 +60,7 @@ export class CalculateImageListTask  extends Task
         }
         //赋值
         CMDData.data.imageList=result;
-        console.log("经过计算本次需要处理："+result.length+"个图片!");
+        CMDData.data.logger.info("经过计算本次需要处理："+result.length+"个图片!");
         this.dispatchEvent(DrongoEvent.COMPLETE);
     }
 

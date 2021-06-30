@@ -8,7 +8,6 @@ const imageinfo =require("imageinfo");
 
 export class CalculateImageMD5Task extends Task {
 
-    private illegalFiles:Array<string>=[];
     constructor() {
         super();
     }
@@ -18,11 +17,7 @@ export class CalculateImageMD5Task extends Task {
         let dir: string = root;
         let out:Array<{ file: string, md5: string }>=CMDData.data.fileMD5List=[];
         this.buildFileMD5(root,dir,out);
-        // if(this.illegalFiles.length){
-        //     this.dispatchEvent(DrongoEvent.ERROR,this.illegalFiles);
-        // }else{
-            this.dispatchEvent(DrongoEvent.COMPLETE);
-        // }
+        this.dispatchEvent(DrongoEvent.COMPLETE);
     }
 
     private buildFileMD5(root: string, dir: string, out: Array<{ file: string, md5: string }>): void {
@@ -70,7 +65,7 @@ export class CalculateImageMD5Task extends Task {
                 //真实类型
                 trueType="."+info.format.toLocaleLowerCase();
                 if(extname!=trueType){
-                    this.illegalFiles.push("文件后缀"+extname+" 真实类型"+trueType+" "+relativePath);
+                    CMDData.data.logger.error("文件后缀"+extname+" 真实类型"+trueType+" "+relativePath);
                 }else{
                     out.push({ file: relativePath, md5: md5Code });
                 }

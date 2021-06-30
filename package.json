@@ -39,6 +39,7 @@
     "imageinfo": "^1.0.4",
     "images": "^3.2.3",
     "inquirer": "^8.0.0",
+    "log4js": "^6.3.0",
     "update-notifier": "^5.1.0"
   }
 }
