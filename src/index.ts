@@ -5,13 +5,21 @@ import { ImageCompressorPipeline } from "./imageCompressors/ImageCompressorPipel
 import { Pipeline } from "./Pipeline";
 import { CopyDirTask } from "./task/CopyDirTask";
 import { SVNCommit } from "./task/SVNCommit";
+import * as fs from "fs";
 const log4js = require("log4js");
+const { Command } = require('commander');
 
 
-CMDData.data = {};
-CMDData.data.input = "D:/erciyuan/clientCS/GameWord";
-CMDData.data.projectPath = "D:/cocos/project";
+let program = new Command();
 
+program
+    .option('-i, --input', 'SVN工程目录')
+    .option('-p, --projectPath', '零时低清工程目录')
+
+program.parse(process.argv);
+
+const options = program.opts();
+if (options.debug) console.log(options);
 
 class Main {
 
@@ -69,8 +77,8 @@ class Main {
         this.pipeline.addTask(new CopyDirTask(
             CMDData.data.input + "/definitions/LowDefinition",
             CMDData.data.projectPath + "/assets", [
-                "fileConfigs.json"
-            ]))
+            "fileConfigs.json"
+        ]))
         this.pipeline.addEvent(DrongoEvent.ERROR, this, this.pipelineError);
         this.pipeline.addEvent(DrongoEvent.COMPLETE, this, this.pipelineComplete);
         this.pipeline.start();
@@ -87,4 +95,20 @@ class Main {
     }
 }
 
-new Main();
+if (options.input && options.projectPath) {
+    if (fs.existsSync(options.input)) {
+        CMDData.data = {};
+        CMDData.data.input = options.input
+        CMDData.data.projectPath = options.projectPath;
+        new Main();
+    } else {
+        console.log("input 项目文件夹不存在！");
+    }
+}else{
+    if(!options.input){
+        console.log("input参数不能为空");
+    }else{
+        console.log("projectPath参数不能为空");
+    }
+
+}
