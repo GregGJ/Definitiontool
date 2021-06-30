@@ -2,6 +2,7 @@ import * as path from "path";
 import { CMDData } from "../CMDData";
 import { DrongoEvent } from "../drongo/events/DrongoEvent";
 import { Task } from "../drongo/task/Task";
+import { cnlog } from "../Log";
 
 /**
  * 计算有多少需要压缩的图片
@@ -60,7 +61,7 @@ export class CalculateImageListTask  extends Task
         }
         //赋值
         CMDData.data.imageList=result;
-        CMDData.data.logger.info("经过计算本次需要处理："+result.length+"个图片!");
+        CMDData.data.logger.info(cnlog("经过计算本次需要处理："+result.length+"个图片!"));
         this.dispatchEvent(DrongoEvent.COMPLETE);
     }
 

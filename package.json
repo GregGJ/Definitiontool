@@ -36,6 +36,7 @@
   "dependencies": {
     "@types/node": "^15.12.4",
     "commander": "^7.2.0",
+    "iconv-lite": "^0.6.3",
     "imageinfo": "^1.0.4",
     "images": "^3.2.3",
     "inquirer": "^8.0.0",

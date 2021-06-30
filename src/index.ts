@@ -34,6 +34,7 @@ class Main {
                 std: {
                     type: "stdout",
                     level: "all",
+                    encoding:"utf-8",
                     layout: { type: "basic", }
                 },
                 file: {
@@ -101,7 +102,7 @@ if (options.input && options.projectPath) {
         CMDData.data.projectPath = options.projectPath;
         new Main();
     } else {
-        console.log("-i not exists");
+        console.log("-input not exists");
     }
 }else{
     if(!options.input){
