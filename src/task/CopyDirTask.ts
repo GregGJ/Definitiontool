@@ -16,7 +16,7 @@ export class CopyDirTask extends Task {
         this.source = source;
         this.target = target;
         if(!fs.existsSync(this.source)){
-            throw new Error("要copy的文件/文件夹不存在:"+this.source);
+            throw new Error("copy file of dir not exists:"+this.source);
         }
         this.exclusion=new Map<string,string>();
         if(exclusion){
@@ -28,12 +28,12 @@ export class CopyDirTask extends Task {
     }
 
     start(data?: any) {
-        CMDData.data.logger.info("开始Copy："+this.source+" to "+this.target);
+        CMDData.data.logger.info("start copy："+this.source+" to "+this.target);
         fsex.copy(this.source, this.target, { filter: this.filterFunc.bind(this) }, (err: any) => {
             if (err) {
                 return console.error(err);
             }
-            CMDData.data.logger.info("Copy完成："+this.source+" to "+this.target);
+            CMDData.data.logger.info("copy end："+this.source+" to "+this.target);
             this.dispatchEvent(DrongoEvent.COMPLETE);
         });
     }

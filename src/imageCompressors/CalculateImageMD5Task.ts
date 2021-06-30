@@ -65,7 +65,7 @@ export class CalculateImageMD5Task extends Task {
                 //真实类型
                 trueType="."+info.format.toLocaleLowerCase();
                 if(extname!=trueType){
-                    CMDData.data.logger.error("文件后缀"+extname+" 真实类型"+trueType+" "+relativePath);
+                    CMDData.data.logger.error("extname "+extname+" true type is "+trueType+" "+relativePath);
                 }else{
                     out.push({ file: relativePath, md5: md5Code });
                 }

@@ -76,7 +76,7 @@ export class ImageCompressorTask extends Task {
             let index:number=this.__workList.indexOf(file);
             this.__workList.splice(index,1);
             
-            CMDData.data.logger.info("图片压缩完成：" + (this.__workList.length+this.imageList!.length) + " " + file.file);
+            CMDData.data.logger.info("image compressor:" + (this.__workList.length+this.imageList!.length) + " " + file.file);
             childProcess.kill();
             this.tryNexts();
         });
@@ -98,7 +98,7 @@ export class ImageCompressorTask extends Task {
         let index:number=this.__workList.indexOf(file);
         this.__workList.splice(index,1);
 
-        CMDData.data.logger.info("图片压缩完成：" + (this.__workList.length+this.imageList!.length) + " " + file.file);
+        CMDData.data.logger.info("image compressor:" + (this.__workList.length+this.imageList!.length) + " " + file.file);
         this.tryNexts();
     }
 

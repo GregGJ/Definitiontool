@@ -38,7 +38,7 @@ export class ImageCompressorPipeline extends TaskQueue {
             let jsonStr = JSON.stringify(list, null, 2);
             if (CMDData.data.fileRecordPath) {
                 fs.writeFileSync(CMDData.data.fileRecordPath, jsonStr);
-                CMDData.data.logger.info("fileConfigs.json保存完毕: " + CMDData.data.fileRecordPath);
+                CMDData.data.logger.info("fileConfigs.json saved: " + CMDData.data.fileRecordPath);
             }
         }
         //清理设置在CMDData.data上的数据
@@ -55,13 +55,13 @@ export class ImageCompressorPipeline extends TaskQueue {
         CMDData.data.pngquantExe = path.parse(__dirname).dir + "/tools/pngquant.exe"
         //先确定两个路径是否正确
         if (!fs.existsSync(CMDData.data.assetsPath) || !fs.existsSync(CMDData.data.lowDefinition)) {
-            CMDData.data.logger.error("input或output 文件夹不存在！");
+            CMDData.data.logger.error("input or output not exist");
             return;
         }
         let assetsStats: fs.Stats = fs.statSync(CMDData.data.assetsPath);
         let assetsLDStats: fs.Stats = fs.statSync(CMDData.data.lowDefinition);
         if (!assetsStats.isDirectory() || !assetsLDStats.isDirectory()) {
-            CMDData.data.logger.error("input或output 必须是文件夹！");
+            CMDData.data.logger.error("input or output not directory");
             return;
         }
 
@@ -117,7 +117,7 @@ export class ImageCompressorPipeline extends TaskQueue {
             for (let index = 0; index < CMDData.data.config.exclude.length; index++) {
                 const file = CMDData.data.config.exclude[index];
                 if (CMDData.data.config.excludeMap.has(file)) {
-                    CMDData.data.logger.error("definitionConfig.json中的exclude列表存在重复：" + file);
+                    CMDData.data.logger.error("definitionConfig.json exclude list item repetition:" + file);
                     continue;
                 }
                 CMDData.data.config.excludeMap.set(file, file);
@@ -139,7 +139,7 @@ export class ImageCompressorPipeline extends TaskQueue {
             for (let index = 0; index < CMDData.data.config.customs.length; index++) {
                 const qualityData = CMDData.data.config.customs[index];
                 if (CMDData.data.customQualityMap.has(qualityData.file)) {
-                    CMDData.data.logger.error("definitionConfig.json中的customs列表存在重复：" + qualityData.file);
+                    CMDData.data.logger.error("definitionConfig.json customs list item repetition:" + qualityData.file);
                     continue;
                 }
                 CMDData.data.customQualityMap.set(qualityData.file, qualityData.quality);

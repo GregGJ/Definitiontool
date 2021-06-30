@@ -15,18 +15,18 @@ export class SVNCommit extends Task {
         super();
         this.folder = folder;
         if(!fs.existsSync(this.folder)){
-            throw new Error("SVN提交文件夹不存在:"+this.folder);
+            throw new Error("svn commit folder not exists:"+this.folder);
         }
     }
 
     start(data?: any): void {
         let cmd: string =this.folder+"/commit.bat";
-        CMDData.data.logger.info("提交压缩记录到SVN"+this.folder);
+        CMDData.data.logger.info("svn commit"+this.folder);
         var childProcess: child_process.ChildProcess = child_process.exec(cmd, (err) => {
             if (err) {
-                CMDData.data.logger.error("提交压缩记录失败"+this.folder+" "+err.message);
+                CMDData.data.logger.error("svn commit failure"+this.folder+" "+err.message);
             }
-            CMDData.data.logger.info("提交压缩记录成功"+this.folder);
+            CMDData.data.logger.info("svn commit succeed"+this.folder);
             childProcess.kill();
             this.dispatchEvent(DrongoEvent.COMPLETE);
         });
