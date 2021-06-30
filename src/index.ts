@@ -97,17 +97,16 @@ class Main {
 if (options.input && options.projectPath) {
     if (fs.existsSync(options.input)) {
         CMDData.data = {};
-        CMDData.data.input = options.input
+        CMDData.data.input = options.input;
         CMDData.data.projectPath = options.projectPath;
         new Main();
     } else {
-        console.log("-i项目文件夹不存在！");
+        console.log("-i not exists");
     }
 }else{
     if(!options.input){
-        console.log("-i参数不能为空");
+        console.log("-input ==null");
     }else{
-        console.log("-p参数不能为空");
+        console.log("-projectPath ==null");
     }
-
 }
