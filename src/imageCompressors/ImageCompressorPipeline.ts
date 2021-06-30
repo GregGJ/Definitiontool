@@ -51,16 +51,16 @@ export class ImageCompressorPipeline extends TaskQueue {
 
     private __init(): void {
         //验证路径
-        CMDData.data.output = CMDData.data.input + "/definitions/LowDefinition";
+        CMDData.data.lowDefinition = CMDData.data.input + "/definitions/LowDefinition";
         CMDData.data.assetsPath = CMDData.data.input + "/assets";
         CMDData.data.pngquantExe = path.parse(__dirname).dir + "/tools/pngquant.exe"
         //先确定两个路径是否正确
-        if (!fs.existsSync(CMDData.data.assetsPath) || !fs.existsSync(CMDData.data.output)) {
+        if (!fs.existsSync(CMDData.data.assetsPath) || !fs.existsSync(CMDData.data.lowDefinition)) {
             CMDData.data.logger.error("input或output 文件夹不存在！");
             return;
         }
         let assetsStats: fs.Stats = fs.statSync(CMDData.data.assetsPath);
-        let assetsLDStats: fs.Stats = fs.statSync(CMDData.data.output);
+        let assetsLDStats: fs.Stats = fs.statSync(CMDData.data.lowDefinition);
         if (!assetsStats.isDirectory() || !assetsLDStats.isDirectory()) {
             CMDData.data.logger.error("input或output 必须是文件夹！");
             return;
@@ -71,7 +71,7 @@ export class ImageCompressorPipeline extends TaskQueue {
         if (CMDData.data.configPath) {
             configPath = CMDData.data.configPath;
         } else {
-            configPath = path.parse(CMDData.data.output).dir + "/definitionConfig.json"
+            configPath = path.parse(CMDData.data.lowDefinition).dir + "/definitionConfig.json"
         }
         if (configPath) {
             if (fs.existsSync(configPath)) {
@@ -81,7 +81,7 @@ export class ImageCompressorPipeline extends TaskQueue {
         }
 
         //文件记录
-        let fileRecordPath: string = CMDData.data.output + "/fileConfigs.json";
+        let fileRecordPath: string = CMDData.data.lowDefinition + "/fileConfigs.json";
         let fileConfigList: Array<{ file: string, md5: string, quality: string }> | undefined;
         if (fileRecordPath) {
             if (fs.existsSync(fileRecordPath)) {
@@ -204,5 +204,7 @@ export class ImageCompressorPipeline extends TaskQueue {
         delete CMDData.data["assetsPath"];
 
         delete CMDData.data["minSize"];
+
+        delete CMDData.data["lowDefinition"];
     }
 }

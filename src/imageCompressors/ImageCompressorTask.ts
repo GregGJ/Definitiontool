@@ -127,8 +127,6 @@ export class ImageCompressorTask extends Task {
     }
 
     private get output(): string {
-        return CMDData.data.output;
+        return CMDData.data.lowDefinition;
     }
-
-   
 }
